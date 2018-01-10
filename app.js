@@ -7,6 +7,10 @@ const
 		app = express().use(bodyParser.json()), // creates express http server
 		request = require('request');
 
+
+const
+		apiHandlers = require('./api-handlers');
+
 // .env variables
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
@@ -79,23 +83,43 @@ app.get('/webhook', (req, res) => {
 function handleMessage(sender_psid, received_message) {
 
 	let response;
+	let userProfile;
 
-	// Check messages contains text
-	if (received_message.text) {
-		response = {
-			"text": `You sent the message: "${received_message.text}". Now send me an image!`
+
+	let firstName;
+	let lastName;
+	let profilePic;
+
+	apiHandlers.getUserProfile(sender_psid).then((data) => {
+		let parsedObject = JSON.parse(data);
+
+		firstName = parsedObject.first_name;
+		lastName = parsedObject.last_name;
+		profilePic = parsedObject.profile_pic;
+
+	}).then(() => {
+		if (received_message.text === "Get started") {
+			console.log(firstName);
+			response = {
+				"attachment": {
+					"type": "template",
+					"payload": {
+						"template_type": "generic",
+						"elements": [
+							{
+								"title": firstName + ' ' + lastName,
+								"subtitle": 'You look like shit today',
+								"image_url": profilePic
+							}
+						]
+					}
+				}
+			}
 		}
 
-	}
-	// If messages contain attachments
-	else if (received_message.attachments) {
-
-		// Gets the URL of the message attachment
-		let attachment_url = received_message.attachments[0].payload.url;
-		console.log(attachment_url);
-	}
-
-	callSendAPI(sender_psid, response);
+		// Send message after promise
+		callSendAPI(sender_psid, response);
+	});
 }
 
 // Handles messaging_postbacks events

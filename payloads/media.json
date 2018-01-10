@@ -1,0 +1,13 @@
+{
+  "attachment": {
+    "type": "template",
+    "payload": {
+      "template_type": "generic",
+      "elements": [
+        {
+          "image_url": "<IMAGE_URL_TO_DISPLAY>"
+        }
+      ]
+    }
+  }
+}
