@@ -98,7 +98,7 @@ function handleMessage(sender_psid, received_message) {
 		profilePic = parsedObject.profile_pic;
 
 	}).then(() => {
-		if (received_message.text === "Get started") {
+		if (received_message.text === "Get Started") {
 			console.log(firstName);
 			response = {
 				"attachment": {
