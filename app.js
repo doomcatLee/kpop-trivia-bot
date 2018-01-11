@@ -5,19 +5,35 @@ const
 		express = require('express'),
 		bodyParser = require('body-parser'),
 		app = express().use(bodyParser.json()), // creates express http server
-		request = require('request');
+		request = require('request'),
+		admin = require("firebase-admin"),
+		serviceAccount = require("./serviceAccountKey.json");
 
-
+// Services to import
 const
-		apiHandlers = require('./api-handlers');
+		apiHandlers = require('./api-handlers'),
+		dbHandlers = require('./database-handlers');
 
 // .env variables
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 
+// Firebase set up
+admin.initializeApp({
+	credential: admin.credential.cert(serviceAccount),
+	databaseURL: "https://kpop-trivia-bot.firebaseio.com"
+});
+
+// Get a database reference to our blog
+const db = admin.database();
+
+// Create paths for firebase
+const ref = db.ref();
+const usersRef = db.ref('users');
+const scoreboardRef = db.ref('scoreboard');
+
 // Sets server port and logs message on success
 app.listen(process.env.PORT || 1337, () => console.log('webhook is listening'));
-
 
 // Creates the endpoint for our webhook
 app.post('/webhook', (req, res) => {
@@ -52,7 +68,6 @@ app.post('/webhook', (req, res) => {
 
 });
 
-
 // Adds support for GET requests to our webhook
 app.get('/webhook', (req, res) => {
 
@@ -78,18 +93,18 @@ app.get('/webhook', (req, res) => {
 	}
 });
 
-
 // Handles messages events
 function handleMessage(sender_psid, received_message) {
 
 	let response;
-	let userProfile;
-
 
 	let firstName;
 	let lastName;
 	let profilePic;
 
+
+
+	// Get user profile from facebook api
 	apiHandlers.getUserProfile(sender_psid).then((data) => {
 		let parsedObject = JSON.parse(data);
 
@@ -97,9 +112,24 @@ function handleMessage(sender_psid, received_message) {
 		lastName = parsedObject.last_name;
 		profilePic = parsedObject.profile_pic;
 
+
+
+		// Do a database scan and pull all users.
+
+		// If sender_psid does not exist in database, create add a new user.
+		dbHandlers.addUser(usersRef, sender_psid, firstName, lastName, profilePic, Date.now());
+
+		dbHandlers.addScore(scoreboardRef, 30231, 50);
+		dbHandlers.addScore(scoreboardRef, 42323, 70);
+		dbHandlers.addScore(scoreboardRef, 1231, 500);
+		// If sender_psid does exist, bring up its previous score.
+
+		// Then user flow...
 	}).then(() => {
-		if (received_message.text === "Get Started") {
-			console.log(firstName);
+
+
+		if (received_message.text) {
+
 			response = {
 				"attachment": {
 					"type": "template",

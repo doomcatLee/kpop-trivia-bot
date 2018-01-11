@@ -21,7 +21,6 @@ function getUserProfile(sender_psid) {
 	});
 }
 
-
 module.exports = {
 	getUserProfile
 };
