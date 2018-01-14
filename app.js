@@ -12,7 +12,8 @@ const
 // Services to import
 const
 		apiHandlers = require('./api-handlers'),
-		dbHandlers = require('./database-handlers');
+		dbHandlers = require('./database-handlers'),
+		appHandlers = require('./app-handlers.js');
 
 // .env variables
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
@@ -112,8 +113,6 @@ function handleMessage(sender_psid, received_message) {
 		lastName = parsedObject.last_name;
 		profilePic = parsedObject.profile_pic;
 
-
-
 		// Do a database scan and pull all users.
 
 		// If sender_psid does not exist in database, create add a new user.
@@ -128,7 +127,9 @@ function handleMessage(sender_psid, received_message) {
 	}).then(() => {
 
 
-		if (received_message.text) {
+		console.log("received message");
+		console.log(received_message);
+		if (received_message.payload == "Get Started") {
 
 			response = {
 				"attachment": {
@@ -155,23 +156,15 @@ function handleMessage(sender_psid, received_message) {
 // Handles messaging_postbacks events
 function handlePostback(sender_psid, received_postback) {
 	let response;
-	console.log(received_postback);
 
 	// Get the payload for the postback
 	let payload = received_postback.payload;
 
-// 	if (payload === 'searchVehicle') {
-// 		response = messageHandler.searchVehicle();
-// 	} else if (payload === 'scheduleAppointment') {
-// 		response = messageHandler.scheduleAppointment();
-// 	} else if (payload === 'findToyota') {
-// 		response = messageHandler.findToyota();
-// 	}
+	if (payload === 'get_started') {
+		response = appHandlers.getStarted();
+	}
 
 
-// 	if (payload === 'sedan') {
-// 		response = messageHandler.findTopSedans();
-// 	}
 
 	callSendAPI(sender_psid, response);
 }
