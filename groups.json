@@ -1,0 +1,22 @@
+
+
+{
+  "groups": [
+    {
+      "name": "got7",
+      "imgUrl": "http://entertainment.inquirer.net/files/2015/10/Screen-Shot-2015-10-01-at-7.06.35-PM.png"
+    },
+    {
+      "name": "beast",
+      "imgUrl": "http://kpopconcerts.com/wp-content/uploads/2012/01/BEAST_Feature.jpg"
+    },
+    {
+      "name": "2ne1",
+      "imgUrl": "https://www.allkpop.com/upload/2017/04/af/2NE1-Girls-Day_1491489313_af.jpg"
+    },
+    {
+      "name": "apink",
+      "imgUrl": "https://0.soompi.io/wp-content/uploads/2017/08/13084708/Apink.jpg"
+    }
+  ]
+}
