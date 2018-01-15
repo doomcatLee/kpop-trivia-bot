@@ -13,11 +13,13 @@ const
 const
 		apiHandlers = require('./api-handlers'),
 		dbHandlers = require('./database-handlers'),
-		appHandlers = require('./app-handlers.js');
+		appHandlers = require('./app-handlers.js'),
+		questionHandlers = require('./question-handlers.js');
 
 // .env variables
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
+
 
 // Firebase set up
 admin.initializeApp({
@@ -96,61 +98,6 @@ app.get('/webhook', (req, res) => {
 
 // Handles messages events
 function handleMessage(sender_psid, received_message) {
-
-	let response;
-
-	let firstName;
-	let lastName;
-	let profilePic;
-
-
-
-	// Get user profile from facebook api
-	apiHandlers.getUserProfile(sender_psid).then((data) => {
-		let parsedObject = JSON.parse(data);
-
-		firstName = parsedObject.first_name;
-		lastName = parsedObject.last_name;
-		profilePic = parsedObject.profile_pic;
-
-		// Do a database scan and pull all users.
-
-		// If sender_psid does not exist in database, create add a new user.
-		dbHandlers.addUser(usersRef, sender_psid, firstName, lastName, profilePic, Date.now());
-
-		dbHandlers.addScore(scoreboardRef, 30231, 50);
-		dbHandlers.addScore(scoreboardRef, 42323, 70);
-		dbHandlers.addScore(scoreboardRef, 1231, 500);
-		// If sender_psid does exist, bring up its previous score.
-
-		// Then user flow...
-	}).then(() => {
-
-
-		console.log("received message");
-		console.log(received_message);
-		if (received_message.payload == "Get Started") {
-
-			response = {
-				"attachment": {
-					"type": "template",
-					"payload": {
-						"template_type": "generic",
-						"elements": [
-							{
-								"title": firstName + ' ' + lastName,
-								"subtitle": 'You look like shit today',
-								"image_url": profilePic
-							}
-						]
-					}
-				}
-			}
-		}
-
-		// Send message after promise
-		callSendAPI(sender_psid, response);
-	});
 }
 
 // Handles messaging_postbacks events
@@ -159,14 +106,65 @@ function handlePostback(sender_psid, received_postback) {
 
 	// Get the payload for the postback
 	let payload = received_postback.payload;
+	let currentScore = 0;
 
-	if (payload === 'get_started') {
-		response = appHandlers.getStarted();
+
+	// Strip out -correct and -incorrect from string if it starts with 'question' so it goes back to switch
+	if (payload.includes('question')) {
+		payload = dbHandlers.filterPayload(scoreboardRef, payload, sender_psid,  currentScore);
 	}
 
+	// User question flow starts here
+	switch (payload) {
 
+			// Get started here
+		case 'get_started':
+			apiHandlers.getUserProfile(sender_psid).then((data) => {
+				const firstName = JSON.parse(data).first_name;
+				const lastName = JSON.parse(data).last_name;
+				const profilePic = JSON.parse(data).profile_pic;
 
-	callSendAPI(sender_psid, response);
+				// If sender_psid does not exist in database, create add a new user.
+				dbHandlers.addUser(usersRef, sender_psid, firstName, lastName, profilePic, Date.now());
+
+				// Call getStarted method
+				response = appHandlers.getStarted(firstName);
+
+				// Call the api
+				callSendAPI(sender_psid, response);
+			});
+			break;
+
+			// Start Quiz here
+		case 'start_quiz':
+			response = questionHandlers.question1();
+
+			// Call the api
+			callSendAPI(sender_psid, response);
+			break;
+
+		case 'question2':
+			response = questionHandlers.question2();
+
+			// Call the api
+			callSendAPI(sender_psid, response);
+			break;
+
+		case 'question3':
+			response = questionHandlers.question3();
+
+			// Call the api
+			callSendAPI(sender_psid, response);
+			break;
+
+		case 'question4':
+			response = questionHandlers.question4();
+
+			// Call the api
+			callSendAPI(sender_psid, response);
+			break;
+	}
+
 }
 
 // Sends response messages via the Send API

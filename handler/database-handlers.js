@@ -28,5 +28,23 @@ db_handlers.addScore = (dbRef, userID, score) => {
 	});
 };
 
+db_handlers.filterPayload = (scoreboardRef, payload, userID, currentScore) => {
+	// Strip out -correct and -incorrect from string if it starts with 'question' so it goes back to switch
+
+	let array;
+	array = payload.split('-');
+
+	// Assign payload to the first value 'question2'
+	payload = array[0];
+
+	// Add score if second value is correct
+	if (array[1] === 'correct') {
+		db_handlers.addScore(scoreboardRef, userID, currentScore + 1);
+	}
+
+	return payload;
+
+};
+
 
 module.exports = db_handlers;
