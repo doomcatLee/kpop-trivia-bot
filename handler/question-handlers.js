@@ -10,7 +10,7 @@ question_handlers.question1 = () => {
 				template_type: 'generic',
 				elements: [
 					{
-						title: 'Who is this group?',
+						title: 'Guess the group!',
 						image_url: 'http://kpopconcerts.com/wp-content/uploads/2012/01/BEAST_Feature.jpg',
 						buttons: [
 							{
@@ -45,7 +45,7 @@ question_handlers.question2 = () => {
 				template_type: 'generic',
 				elements: [
 					{
-						title: 'Who is this group2?',
+						title: 'Guess the group!',
 						image_url: 'http://i.imgur.com/QW4lzj8.jpg',
 						buttons: [
 							{
@@ -80,7 +80,7 @@ question_handlers.question3 = () => {
 				template_type: 'generic',
 				elements: [
 					{
-						title: 'Who is this group2?',
+						title: 'Guess the group!',
 						image_url: 'https://www.allkpop.com/upload/2016/10/af_org/MBLAQ_1477265275_af_org.jpg',
 						buttons: [
 							{
@@ -114,7 +114,7 @@ question_handlers.question4 = () => {
 				template_type: 'generic',
 				elements: [
 					{
-						title: 'Who is this group2?',
+						title: 'Guess the group!',
 						image_url: 'https://i.imgur.com/9sFe4QK.jpg',
 						buttons: [
 							{
@@ -131,6 +131,64 @@ question_handlers.question4 = () => {
 								type: 'postback',
 								title: 'Secret',
 								payload: 'question5-correct'
+							}
+						]
+					}
+				]
+			}
+		}
+	};
+};
+
+question_handlers.questionEnd = () => {
+	return {
+		attachment: {
+			type: 'template',
+			payload: {
+				template_type: 'generic',
+				elements: [
+					{
+						title: 'Guess the group!',
+						image_url: 'https://i.imgur.com/9sFe4QK.jpg',
+						buttons: [
+							{
+								type: 'postback',
+								title: 'Miss A',
+								payload: 'End-incorrect'
+							},
+							{
+								type: 'postback',
+								title: 'Sistar',
+								payload: 'End-incorrect'
+							},
+							{
+								type: 'postback',
+								title: 'Secret',
+								payload: 'End-correct'
+							}
+						]
+					}
+				]
+			}
+		}
+	};
+};
+
+question_handlers.displayScoreboard = (userObject) => {
+	let score = userObject.gameScore;
+	return {
+		attachment: {
+			type: 'template',
+			payload: {
+				template_type: 'generic',
+				elements: [
+					{
+						title: 'You scored' + score + ' points!',
+						buttons: [
+							{
+								type: 'postback',
+								title: 'View Scoreboard',
+								payload: 'viewScoreboard'
 							}
 						]
 					}

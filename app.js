@@ -33,7 +33,6 @@ const db = admin.database();
 // Create paths for firebase
 const ref = db.ref();
 const usersRef = db.ref('users');
-const scoreboardRef = db.ref('scoreboard');
 
 // Sets server port and logs message on success
 app.listen(process.env.PORT || 1337, () => console.log('webhook is listening'));
@@ -106,46 +105,47 @@ function handlePostback(sender_psid, received_postback) {
 
 	// Get the payload for the postback
 	let payload = received_postback.payload;
-	let currentScore = 0;
+	console.log(payload)
 
 	// Strip out -correct and -incorrect from string if it starts with 'question' so it goes back to switch
 	// Add score to firebase if payload has 'correct' string.
-	if (payload.includes('question')) {
-		payload = dbHandlers.filterPayload(scoreboardRef, payload, sender_psid,  currentScore);
+	if (payload.includes('question') || payload.includes('End')) {
+		// Grab the fire item in the array from /filterPayload and assign to payload string.
+		payload = dbHandlers.filterPayload(usersRef, payload, sender_psid);
 	}
-
 
 	// User question flow starts here
 	switch (payload) {
-
 			// Get started here
 		case 'get_started':
+			// dbHandlers.setNewUser(usersRef, '1234Test', 'john', 'dork', 'profilePic', Date.now(), 0);
+
 			apiHandlers.getUserProfile(sender_psid).then((data) => {
 				const firstName = JSON.parse(data).first_name;
 				const lastName = JSON.parse(data).last_name;
 				const profilePic = JSON.parse(data).profile_pic;
 
-				let userExists = false;
-
+				// Trigger, whether to add user to firebase or not.
+				// This has to be true in order for payload proccess to not crash on line 146 if.
+				let userNoExists = true;
 
 				// Grab ref and loop through users ref and find userID.
-				usersRef.once("value", function(snapshot) {
-
+				usersRef.once("value", function (snapshot) {
 					try {
-						snapshot.forEach(function(snapshot) {
+						snapshot.forEach(function (snapshot) {
 							if (snapshot.val().userID === sender_psid) {
-								userExists = true;
+								console.log('User exists in firebase');
+								userNoExists = false;
 								return;
 							}
 						});
 					} catch (e) {
-
+						console.log(e);
 					}
-
 				});
 
-				if (!userExists) {
-					dbHandlers.addUser(usersRef, sender_psid, firstName, lastName, profilePic, Date.now());
+				if (!userNoExists) {
+					dbHandlers.setNewUser(usersRef, sender_psid, firstName, lastName, profilePic, Date.now(), 0);
 				}
 
 				// Call getStarted method
@@ -184,6 +184,20 @@ function handlePostback(sender_psid, received_postback) {
 			// Call the api
 			callSendAPI(sender_psid, response);
 			break;
+
+		case 'question5':
+			response = questionHandlers.questionEnd();
+
+			// Call the api
+			callSendAPI(sender_psid, response);
+			break;
+
+		case 'End':
+			// Show them the score board!
+			console.log('got to End');
+			let userObject = dbHandlers.findUserObject(usersRef, sender_psid);
+			response = questionHandlers.displayScoreboard(userObject);
+			callSendAPI(sender_psid, response);
 	}
 
 }
@@ -198,6 +212,14 @@ function callSendAPI(sender_psid, response) {
 		},
 		"message": response
 	};
+
+	dbHandlers.findUserObject(usersRef, sender_psid).then((snapshot) => {
+		console.log('g spot')
+		console.log('response')
+		response = questionHandlers.displayScoreboard(snapshot);
+	});
+
+
 
 	// Send the HTTP request to the Messenger Platform
 	request({
