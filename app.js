@@ -108,11 +108,12 @@ function handlePostback(sender_psid, received_postback) {
 	let payload = received_postback.payload;
 	let currentScore = 0;
 
-
 	// Strip out -correct and -incorrect from string if it starts with 'question' so it goes back to switch
+	// Add score to firebase if payload has 'correct' string.
 	if (payload.includes('question')) {
 		payload = dbHandlers.filterPayload(scoreboardRef, payload, sender_psid,  currentScore);
 	}
+
 
 	// User question flow starts here
 	switch (payload) {
@@ -124,8 +125,28 @@ function handlePostback(sender_psid, received_postback) {
 				const lastName = JSON.parse(data).last_name;
 				const profilePic = JSON.parse(data).profile_pic;
 
-				// If sender_psid does not exist in database, create add a new user.
-				dbHandlers.addUser(usersRef, sender_psid, firstName, lastName, profilePic, Date.now());
+				let userExists = false;
+
+
+				// Grab ref and loop through users ref and find userID.
+				usersRef.once("value", function(snapshot) {
+
+					try {
+						snapshot.forEach(function(snapshot) {
+							if (snapshot.val().userID === sender_psid) {
+								userExists = true;
+								return;
+							}
+						});
+					} catch (e) {
+
+					}
+
+				});
+
+				if (!userExists) {
+					dbHandlers.addUser(usersRef, sender_psid, firstName, lastName, profilePic, Date.now());
+				}
 
 				// Call getStarted method
 				response = appHandlers.getStarted(firstName);
